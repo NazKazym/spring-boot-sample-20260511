@@ -1,0 +1,39 @@
+# --- IDE / Editor Files ---
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+bin/
+
+# --- Build Tools (Maven/Gradle) ---
+**/target/
+**/build/
+
+target/
+build/
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# --- Operating System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Environment & Logs ---
+*.log
+.env
+.env.local
+.env.*.local
+
+init_setup.sh
+# --- Java/Kotlin Specific ---
+*.class
+*.jar
+*.war
+*.ear
+*.ctxt
+
+# --- Docker ---
+.docker/
