@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtFilter.class);
     private final JwtService jwtService;
 
     public JwtFilter(JwtService jwtService) {
@@ -26,27 +29,30 @@ public class JwtFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+        final String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            String email = jwtService.extractEmail(token);
+            try {
+                String email = jwtService.extractEmail(token);
 
-            // If we have an email and the user isn't already authenticated in this context
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // In a real app, you might load user details from the DB here
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        email, null, new ArrayList<>()
-                );
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    log.debug("JWT valid for user: {}", email);
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            email, null, new ArrayList<>()
+                    );
 
-                // Final step: Update the Security Context
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } catch (Exception e) {
+                // Log the error but don't stop the chain; let Security handle the lack of authentication
+                log.error("Cannot set user authentication: {}", e.getMessage());
             }
         }
 
-        // Continue to the next filter in the chain
+        // CRITICAL: Always move to the next filter
         filterChain.doFilter(request, response);
     }
 }
