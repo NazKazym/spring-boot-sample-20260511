@@ -1,0 +1,15 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: data-api
+
+# Custom property for cross-service communication security
+auth:
+  internal-token: ${INTERNAL_TOKEN}
+
+logging:
+  level:
+    root: INFO
+    com.example.data: DEBUG
