@@ -22,7 +22,7 @@ public class ProcessService {
         this.restClient = RestClient.builder().baseUrl("http://data-api:8081").build();
     }
 
-    public record TransformResponse(String result) {}
+    public record TransformResponse(String transformedText) {}
 
     public String processText(UUID userId, String text) {
         TransformResponse response = restClient.post()
@@ -32,7 +32,7 @@ public class ProcessService {
                 .retrieve()
                 .body(TransformResponse.class);
 
-        logRepository.save(new ProcessingLog(userId, text, response.result()));
-        return response.result();
+        logRepository.save(new ProcessingLog(userId, text, response.transformedText()));
+        return response.transformedText();
     }
 }

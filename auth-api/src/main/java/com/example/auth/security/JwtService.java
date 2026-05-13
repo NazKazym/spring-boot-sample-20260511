@@ -2,14 +2,14 @@ package com.example.auth.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Service
@@ -20,35 +20,37 @@ public class JwtService {
     @Value("${JWT_SECRET}")
     private String secret;
 
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+    private SecretKey getSigningKey() {
+        // Use StandardCharsets for consistency
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(String email) {
         log.info("Generating JWT token for user: {}", email);
         return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 24 hours
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .subject(email) // Replaces setSubject()
+                .issuedAt(new Date()) // Replaces setIssuedAt()
+                .expiration(new Date(System.currentTimeMillis() + 86400000)) // Replaces setExpiration()
+                .signWith(getSigningKey()) // Algorithm is now inferred from the Key type (HS256)
                 .compact();
     }
 
     public String extractEmail(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+            // parserBuilder() is now simplified back to parser()
+            Claims claims = Jwts.parser()
+                    .verifyWith(getSigningKey()) // Replaces setSigningKey()
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token) // Replaces parseClaimsJws()
+                    .getPayload(); // Replaces getBody()
 
             return claims.getSubject();
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
-            log.warn("JWT token has expired: {}", e.getMessage());
+            log.warn("JWT token has expired");
         } catch (io.jsonwebtoken.security.SignatureException e) {
-            log.error("JWT signature does not match: {}", e.getMessage());
+            log.error("JWT signature does not match");
         } catch (io.jsonwebtoken.MalformedJwtException e) {
-            log.error("Invalid JWT format: {}", e.getMessage());
+            log.error("Invalid JWT format");
         } catch (Exception e) {
             log.error("Failed to extract email from token: {}", e.getMessage());
         }

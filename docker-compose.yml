@@ -42,6 +42,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      auth-api:
+        condition: service_started
     environment:
       INTERNAL_TOKEN: ${INTERNAL_TOKEN}
 

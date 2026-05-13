@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransformController {
     private static final Logger log = LoggerFactory.getLogger(TransformController.class);
 
-    record TransformRequest(
+    public record TransformRequest(
             @NotBlank(message = "Text cannot be empty")
             @Size(min = 1, max = 500, message = "Text length must be between 1 and 500 characters")
             String text
     ) {}
-    record TransformResponse(String transformedText) {}
+    public record TransformResponse(String transformedText) {}
 
     @PostMapping("/transform")
     public TransformResponse transform(@RequestBody TransformRequest request) {

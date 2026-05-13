@@ -3,6 +3,9 @@ package com.example.auth.controller;
 import com.example.auth.model.User;
 import com.example.auth.repository.UserRepository;
 import com.example.auth.service.ProcessService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,12 +28,17 @@ public class ProcessController {
         this.userRepository = userRepository;
     }
 
-    public record ProcessRequest(String text) {}
+    public record ProcessRequest(
+            @NotBlank(message = "Text cannot be empty")
+            @Size(min = 1, max = 1000, message = "Text length must be between 1 and 1000 characters")
+            String text
+    ) {}
+
     public record ProcessResponse(String result) {}
 
     @PostMapping("/process")
     public ProcessResponse process(
-            @RequestBody ProcessRequest request,
+            @Valid @RequestBody ProcessRequest request,
             @AuthenticationPrincipal String email // Spring injects the principal from SecurityContext
     ) {
         log.info("Process request started for user: {}", email);
